@@ -14,8 +14,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 
 contract NFT is ERC721URIStorage {
 
-    //using is used for including a
-    //library within a contract in solidity.
+   
 
     using Counters for Counters.Counter;
 
