@@ -1,12 +1,10 @@
-
-
 import { useState, useEffect } from "react";
-
 import CONFIG from "../../config";
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
     const [wallet,setWallet] = useState();
+   
     const navigate = useNavigate();
     
 
@@ -22,7 +20,7 @@ const Navbar = () => {
     <nav className="bg-blue-500 mx-auto w-full p-4">
     <div className="container flex flex-col md:flex-row justify-between items-center">
       {/* Logo */}
-      <div onClick= {()=> navigate('/Home')} className="text-white text-2xl font-bold mb-4 md:mb-0 ">
+      <div onClick= {()=> navigate('/')} className="text-white text-2xl font-bold mb-4 md:mb-0 ">
         <a className="hover:cursor-pointer hover:text-black transition duration-300 ease-in-out">
         NFTM Marketplace
         </a>

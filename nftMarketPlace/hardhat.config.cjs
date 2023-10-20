@@ -23,5 +23,4 @@ module.exports = {
 		apiKey: process.env.VITE_POLYGONSCAN_KEY,
 	},
 };
-// 0x9Fd5E893D45CECd5861C12416e9Bf05cdcc41774
 

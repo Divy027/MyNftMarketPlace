@@ -1,8 +1,9 @@
 import {useState} from 'react'
-import {ethers} from 'ethers'
+import {Contract,ethers} from 'ethers'
 
 import { create } from 'kubo-rpc-client'
-// import Web3Modal from'web3modal'
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import CONFIG from '../../config'
@@ -60,90 +61,101 @@ export default function CreateItem(){
     }
   }
 
-  async function createSale(url){
-    const Provider = new ethers.providers.Web3Provider(
-        window.ethereum
-    );
-    const signer = Provider.getSigner();
-    const NftContract = new Contract(
+  async function createSale(url) {
+    try {
+      const Provider = new ethers.providers.Web3Provider(window.ethereum);
+      const signer = Provider.getSigner();
+      const NftContract = new Contract(
         CONFIG.NFT.CONTRACTADDRESS721,
         CONFIG.NFT.ABINFT,
         signer
-    );
-
-   
-    const transaction=await NftContract.createToken(url)
-    const tx=await transaction.wait()
-    const event=tx.events[0]
-    const value=event.args[2]
-    const tokenId=value.toNumber()
-
-    const price=ethers.utils.parseUnits(formInput.price,'ether')
-
-    const MarketContract = new Contract(
+      );
+  
+      const transaction = await NftContract.createToken(url);
+      const tx = await transaction.wait();
+      const event = tx.events[0];
+      const value = event.args[2];
+      const tokenId = value.toNumber();
+      
+      const price = ethers.utils.parseUnits(formInput.price, 'ether');
+  
+      const MarketContract = new Contract(
         CONFIG.NFTMarket.CONTRACTADDRESSNFTM,
         CONFIG.NFTMarket.ABINFTM,
         signer
-    );
-    let listingPrice=await MarketContract.getListingPrice()
-    listingPrice=listingPrice.toString()
-
-    const TX=await Contract.createMarketItem(CONFIG.NFT.CONTRACTADDRESS721,tokenId,price,{value: listingPrice})
-    await TX.wait()
-    navigate('/Home')
+      );
+  
+      let listingPrice = await MarketContract.getListingPrice();
+      listingPrice = listingPrice.toString();
+  
+      const TX = await MarketContract.createMarketItem(CONFIG.NFT.CONTRACTADDRESS721, tokenId, price, {
+        value: listingPrice,
+      });
+      await TX.wait();
+      toast.success("Nft ready to Sell !")
+      navigate('/Home');
+    } catch (error) {
+      toast.error("Error in creating sale")
+      console.error("Error creating sale:", error);
+      
+    }
   }
+  
 
-  return(
+  return (
     <div>
-        <Navbar/>
-        <div className="flex justify-center">
-    
-            <div className="w-full md:w-1/2 flex flex-col items-center p-6 md:p-12">
+      <Navbar />
+      <div className="flex justify-center">
+        <div className="w-full md:w-1/2 flex flex-col items-center p-6 md:p-12">
+          <input
+            placeholder="NFT Name"
+            className="mt-4 border rounded p-4 w-full"
+            onChange={(e) => updateFormInput({ ...formInput, name: e.target.value })}
+          />
+  
+          <textarea
+            placeholder="NFT Description"
+            className="mt-4 border rounded p-4 w-full"
+            onChange={(e) => updateFormInput({ ...formInput, description: e.target.value })}
+          />
+  
+          <input
+            placeholder="NFT price in ETH"
+            className="mt-4 border rounded p-4 w-full"
+            onChange={(e) => updateFormInput({ ...formInput, price: e.target.value })}
+          />
+  
+          <label className="mt-4 text-blue-600 cursor-pointer hover:underline">
             <input
-                placeholder="NFT Name"
-                className="mt-4 border rounded p-4 w-full"
-                onChange={(e) => updateFormInput({ ...formInput, name: e.target.value })}
-            />
-
-            <textarea
-                placeholder="NFT Description"
-                className="mt-4 border rounded p-4 w-full"
-                onChange={(e) => updateFormInput({ ...formInput, description: e.target.value })}
-            />
-
-            <input
-                placeholder="NFT price in ETH"
-                className="mt-4 border rounded p-4 w-full"
-                onChange={(e) => updateFormInput({ ...formInput, price: e.target.value })}
-            />
-
-            <label className="mt-4 text-blue-600 cursor-pointer hover:underline">
-            <input
-                type="file"
-                name="asset"
-                className="hidden"
-                onChange={onChange}
+              type="file"
+              name="asset"
+              className="hidden"
+              onChange={onChange}
             />
             <span className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 cursor-pointer">
-                Upload NFT Image
+              Upload NFT Image
             </span>
-            </label>
-
-            {fileUrl && (
-                <img className="rounded mt-4" width="350" src={fileUrl} alt="NFT Preview" />
-            )}
-
-            <button
-                onClick={CreateMarket}
-                className="font-bold mt-6 bg-gradient-to-r from-green-400 to-blue-500 hover:from-pink-500 hover:to-yellow-500 text-white rounded p-4 shadow-lg"
-            >
-                Create NFT
-            </button>
-            </div>
+          </label>
+  
+          {fileUrl && (
+            <img className="rounded mt-4" width="350" src={fileUrl} alt="NFT Preview" />
+          )}
+  
+          <button
+            onClick={CreateMarket}
+            className="font-bold mt-6 bg-gradient-to-r from-green-400 to-blue-500 hover:from-pink-500 hover:to-yellow-500 text-white rounded p-4 shadow-lg"
+          >
+            Create NFT
+          </button>
+  
+          <p className="mt-4 text-gray-600 text-sm">
+            Listing price: 0.00001 Ether
+          </p>
         </div>
+      </div>
+      <ToastContainer/>
     </div>
-        
-
-    )
+  );
+  
 
     };

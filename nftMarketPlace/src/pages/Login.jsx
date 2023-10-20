@@ -2,27 +2,29 @@ import { useNavigate } from "react-router-dom";
 import CONFIG from "../../config";
 import { connectWallet } from "../../utils";
 import logo from "../assets/metamask.png"
-
+import { useEffect } from "react";
 
 
 const login  = ()=> {
-   
+
    const navigate = useNavigate();
     
     const handleConnect = async()=> {
        const wallet =  await connectWallet();
-      
+     
       localStorage.setItem(CONFIG.WALLET_STATUS_LOCALSTORAGE, "connected");
       localStorage.setItem(CONFIG.WALLET_ADRESS_LOCALSTORAGE, wallet.address);
-
+    
       if(wallet){
-        const get_walletAddress = localStorage.getItem(
-            CONFIG.WALLET_ADRESS_LOCALSTORAGE
-          );
-          console.log('wallet',get_walletAddress)
+       
         navigate('/home');
       }
     }
+    useEffect(() => {
+      
+     
+    }, [])
+    
     return (
         <>
           <div className="min-h-screen flex items-center justify-center">
@@ -49,9 +51,7 @@ const login  = ()=> {
               </div>
             </div>
           </div>
-          <div className="fixed top-4 right-8">
-          
-          </div>
+         
         </>
       );
 }
