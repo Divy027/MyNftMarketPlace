@@ -6,15 +6,20 @@ import CONFIG from '../../config'
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { getBalance } from '../../utils'
+import { useSelector } from 'react-redux'
 
 export default function Home(){
     const [nfts,setNFts]=useState([])
     const [loadingState,setLoadingState]=useState('not-loaded')
     const [isLoading, setLoading] = useState(false);
+    const storeData = useSelector((status) => status);
 
     useEffect(()=>{
         loadNFTs()
     },[])
+    useEffect(()=> {
+        loadNFTs()
+    },[storeData])
 
     async function loadNFTs(){
       try{
