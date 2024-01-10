@@ -87,6 +87,7 @@ export default function Home(){
           console.log(Balance)
           if(Balance < nft.price.toString()){
             toast.error("Not enough Balance to buy NFT")
+            setLoading(false);
             return ;
           }
           
