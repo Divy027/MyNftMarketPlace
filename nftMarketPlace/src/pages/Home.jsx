@@ -17,9 +17,7 @@ export default function Home(){
     useEffect(()=>{
         loadNFTs()
     },[])
-    useEffect(()=> {
-        loadNFTs()
-    },[storeData])
+    
 
     async function loadNFTs(){
       try{
