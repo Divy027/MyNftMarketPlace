@@ -1,6 +1,5 @@
 import './App.css'
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from './pages/login';
+import { Routes, Route } from "react-router-dom";
 import Home from './pages/Home';
 import CreateItem from './pages/SellNft';
 import MyAssets from './pages/MyNft';
