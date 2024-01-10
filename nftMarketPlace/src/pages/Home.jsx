@@ -17,6 +17,7 @@ export default function Home(){
     },[])
 
     async function loadNFTs(){
+      try{
         setLoading(true);
         const Provider = new ethers.providers.Web3Provider(
             window.ethereum
@@ -59,6 +60,11 @@ export default function Home(){
         
          setLoadingState('loaded')
          setLoading(false);
+      }catch(e){
+        setLoading(false);
+        setNFts([]);
+      }
+       
     }
 
     async function buyNFT(nft) {
