@@ -10,12 +10,14 @@ import { getBalance } from '../../utils'
 export default function Home(){
     const [nfts,setNFts]=useState([])
     const [loadingState,setLoadingState]=useState('not-loaded')
+    const [isLoading, setLoading] = useState(false);
 
     useEffect(()=>{
         loadNFTs()
     },[])
 
     async function loadNFTs(){
+        setLoading(true);
         const Provider = new ethers.providers.Web3Provider(
             window.ethereum
         );
@@ -56,10 +58,12 @@ export default function Home(){
         setNFts(items)
         
          setLoadingState('loaded')
+         setLoading(false);
     }
 
     async function buyNFT(nft) {
         try {
+          setLoading(true);
           const Provider = new ethers.providers.Web3Provider(window.ethereum);
           const signer = Provider.getSigner();
           const MarketContract = new Contract(
@@ -81,11 +85,13 @@ export default function Home(){
             value: price,
           });
           await transaction.wait();
+          setLoading(false);
           loadNFTs();
           toast.success("Success in buying NFT !")
         } catch (error) {
           console.error("Error buying NFT:", error);
           toast.error("Error in Buying NFT")
+          setLoading(false);
           
         }
       }
@@ -104,7 +110,7 @@ export default function Home(){
               </div>
             </div>
             <div className="p-4 bg-blue-500">
-              <p className="text-xl font-bold text-white">{nft.price} ETH</p>
+              <p className="text-xl font-bold text-white">{nft.price} MATIC</p>
               <button
                 onClick={() => buyNFT(nft)}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mt-2 transition duration-300"
@@ -132,21 +138,32 @@ export default function Home(){
         );
     }else{
         return(
-
-            <div className="h-screen w-full ">
-               <Navbar/>
-                <div className="flex justify-center p-6">
-                    <div className="container mx-auto py-6">
-                      {/* NFT GRID */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-                        {nfts.map((nft, i) => (
-                            <NftCard key={i} nft={nft} buyNFT={buyNFT} />
-                        ))}
-                        </div>
-                    </div>
+          <>
+            {isLoading ? (
+              <>
+                <Navbar/>
+                <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center backdrop-blur-md bg-gray-800 bg-opacity-50 z-50">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
                 </div>
-                <ToastContainer/>
-            </div>
+              </>
+            ) : (
+              <div className="h-screen w-full">
+                <Navbar />
+                <div className="flex justify-center p-6">
+                  <div className="container mx-auto py-6">
+                    {/* NFT GRID */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                      {nfts.map((nft, i) => (
+                        <NftCard key={i} nft={nft} buyNFT={buyNFT} />
+                      ))}
+                    </div>  
+                  </div>
+                </div> 
+                <ToastContainer />
+              </div>
+            )}
+          </>
+           
         );
     }
    

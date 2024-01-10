@@ -26,6 +26,8 @@ const auth = "Basic " + btoa(`${projectId}:${projectSecret}`);
 export default function CreateItem(){
   const [fileUrl,setFileUrl] = useState(null)
   const [formInput,updateFormInput]=useState({price:"",name:"",description:""})
+  const [isLoading,setLoading] = useState(false);
+  const [imgLoading, setImgLoading] = useState(false);
 
   const navigate=useNavigate()
   
@@ -45,6 +47,7 @@ export default function CreateItem(){
   }
 
   async function CreateMarket(){
+    setLoading(true);
     const {name,description,price}=formInput
     if(!name||!description||!price||!fileUrl) return
 
@@ -55,9 +58,10 @@ export default function CreateItem(){
       const added=await client.add(data)
       const url=`https://nftmdivy.infura-ipfs.io/ipfs/${added.path}`
       console.log(url)
-      createSale(url)
+      await createSale(url)
     }catch(error){
       console.log('error uploading file:',error)
+      setLoading(false);
     }
   }
 
@@ -92,17 +96,25 @@ export default function CreateItem(){
         value: listingPrice,
       });
       await TX.wait();
+      setLoading(false);
       toast.success("Nft ready to Sell !")
-      navigate('/Home');
+      navigate('/');
     } catch (error) {
       toast.error("Error in creating sale")
       console.error("Error creating sale:", error);
+      setLoading(false);
       
     }
   }
   
 
   return (
+    <>
+    {isLoading && (
+       <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center backdrop-blur-md bg-gray-800 bg-opacity-50 z-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
+      </div>
+    )}
     <div>
       <Navbar />
       <div className="flex justify-center">
@@ -120,7 +132,7 @@ export default function CreateItem(){
           />
   
           <input
-            placeholder="NFT price in ETH"
+            placeholder="NFT price in MATIC"
             className="mt-4 border rounded p-4 w-full"
             onChange={(e) => updateFormInput({ ...formInput, price: e.target.value })}
           />
@@ -149,12 +161,13 @@ export default function CreateItem(){
           </button>
   
           <p className="mt-4 text-gray-600 text-sm">
-            Listing price: 0.00001 Ether
+            Listing price: 0.00001 MATIC
           </p>
         </div>
       </div>
       <ToastContainer/>
     </div>
+    </>
   );
   
 
