@@ -5,6 +5,7 @@ import CreateItem from './pages/SellNft';
 import MyAssets from './pages/MyNft';
 import { WagmiConfig, createConfig, configureChains, mainnet } from "wagmi";
 import { publicProvider } from "wagmi/providers/public";
+import Dispute from './pages/DisputeSale';
 const { publicClient, webSocketPublicClient } = configureChains(
   [mainnet],
   [publicProvider()]
@@ -21,11 +22,11 @@ function App() {
   return (
     <>  
     <WagmiConfig config={config}>
-    
       <Routes>
         <Route path='/' element={<Home/>}/>
         <Route path='/sell' element={<CreateItem/>} />
         <Route path='/myNFT' element={<MyAssets/>}/>
+        <Route path='/DisputeSale' element={<Dispute/>}/>
       </Routes>
     </WagmiConfig>
     </>

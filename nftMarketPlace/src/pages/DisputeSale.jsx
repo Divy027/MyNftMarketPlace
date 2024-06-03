@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react'
 import axios from 'axios'
 import CONFIG from '../../config'
 import Navbar from '../components/Navbar'
+import { toast } from 'react-toastify'
 
-  export default function MyAssets() {
+  export default function Dispute() {
      const [nfts,setNfts]=useState([]) 
      const [loadingState,setLoadingState] = useState('not-loaded')
      const [isLoading,setLoading] = useState(false);
@@ -13,15 +14,16 @@ import Navbar from '../components/Navbar'
      }, [])
 
      useEffect(() => {
-      try {
-        window.ethereum.on("accountsChanged", async () => {
-          loadNFTs()
-
-        });
-      } catch (e) {
-        console.log(e);
-      }
-    }, []);
+        try {
+          window.ethereum.on("accountsChanged", async () => {
+            loadNFTs()
+    
+           
+          });
+        } catch (e) {
+          console.log(e);
+        }
+      }, []);
 
      async function loadNFTs() {    
         setLoading(true);
@@ -40,33 +42,67 @@ import Navbar from '../components/Navbar'
             signer
         );
 
-        const data = await MarketContract.fetchMyNFTs()
+        const data = await MarketContract.fetchDisputedItems()
 
-        const items = await Promise.all(data.map(async i => {
-          const tokenUri = await NftContract.tokenURI(i.tokenId)
-          const meta = await axios.get(tokenUri)
+        const items = await Promise.all(data.map(async (i) => {
+            const tokenUri = await NftContract.tokenURI(i.tokenId);
+            const meta = await axios.get(tokenUri);
         
-          let item = {
-            price: i.price.toString(),
-            tokenId: i.tokenId.toNumber(),
-            seller: i.seller,
-            owner: i.owner,
-            image: meta.data.image,
-            finalized: i.finalized,
-            disputed: i.disputed,
+            let item = {
+                itemId: ethers.utils.parseUnits(i.itemId.toString())/CONFIG.DECIMAL,
+                price: i.price.toString(),
+                tokenId: i.tokenId.toNumber(),
+                seller: i.seller,
+                owner: i.owner,
+                image: meta.data.image,
+            };
         
-          }
-          return item
-        }))
-        setNfts(items)
+            // Return item only if it matches the condition
+            if (!i.disputed && i.sold) {
+                return item;
+            }
+        
+            // Return null if the condition is not met
+            return null;
+        }));
+        
+        // Filter out null items
+        const validItems = items.filter((item) => item !== null);
+        setNfts(validItems);
         setLoadingState('loaded') 
         setLoading(false);
       }
+
+      async function DisputeNFT(nft) {
+        try {
+            console.log(nft);
+          setLoading(true);
+          const Provider = new ethers.providers.Web3Provider(window.ethereum);
+          const signer = Provider.getSigner();
+          const MarketContract = new Contract(
+            CONFIG.NFTMarket.CONTRACTADDRESSNFTM,
+            CONFIG.NFTMarket.ABINFTM,
+            signer
+          );
+         
+          const transaction = await MarketContract.disputeSale(nft.itemId);
+          await transaction.wait();
+          setLoading(false);
+          loadNFTs();
+          toast.success("Success in Disputing NFT Sale !")
+        } catch (error) {
+          console.error("Error Disputing NFT Sale:", error);
+          toast.error("Error in Disputing NFT Sale")
+          setLoading(false);
+          
+        }
+      }
+
       if (loadingState === 'loaded' && !nfts.length) {
         return (
           <div>
             <Navbar/>
-              <h1 className="py-10 px-20 text-3xl text-center">No assets owned</h1>
+              <h1 className="py-10 px-20 text-3xl text-center">No Items Found to dispute</h1>
           </div>
           
         );
@@ -97,12 +133,12 @@ import Navbar from '../components/Navbar'
                           <p className="text-xl font-bold text-white">
                             Price - {nft.price} USD
                           </p>
-                          <p className="text-xl font-bold text-white">
-                              Sale Disputed - {nft.disputed ? "Yes" : "No"}
-                          </p>
-                          <p className="text-xl font-bold text-white">
-                              Sale Finalized - {nft.disputed ? "Yes" : (nft.finalized ? "Yes" : "In Progress..")}
-                          </p>
+                          <button
+                            onClick={() => DisputeNFT(nft)}
+                            className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mt-2 transition duration-300"
+                          >
+                            Dispute Sale
+                        </button>
                         </div>
                       </div>
                     ))}
@@ -111,9 +147,9 @@ import Navbar from '../components/Navbar'
                 </div>
               </div>
   
-              </div>
-            )}
-          </>
+            </div>
+          )}
+         </>
         );
       }
       

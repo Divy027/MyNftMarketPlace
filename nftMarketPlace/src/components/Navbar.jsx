@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import CONFIG from "../../config";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
@@ -7,7 +7,6 @@ import { connectWallet } from "../../utils";
 
 
 const Navbar = () => {
-    const [wallet,setWallet] = useState();
     const dispatch = useDispatch();
     const storeData = useSelector((status) => status);
    
@@ -54,7 +53,6 @@ const Navbar = () => {
       localStorage.setItem(CONFIG.WALLET_STATUS_LOCALSTORAGE, "connected");
       localStorage.setItem(CONFIG.WALLET_ADRESS_LOCALSTORAGE, accounts[0]);
   
-        // Handle connected state here
       } else {
         console.log("Metamask is not connected");
         dispatch(
@@ -66,17 +64,9 @@ const Navbar = () => {
       localStorage.setItem(CONFIG.WALLET_STATUS_LOCALSTORAGE, "disconnect");
       localStorage.setItem(CONFIG.WALLET_ADRESS_LOCALSTORAGE, "");
         
-        // Handle disconnected state here
       }
     }
     
-
-  useEffect(()=> {
-    const get_walletAddress = localStorage.getItem(
-        CONFIG.WALLET_ADRESS_LOCALSTORAGE
-      );
-      setWallet(get_walletAddress)
-  },[])
 
   useEffect(() => {
     try {
@@ -91,11 +81,7 @@ const Navbar = () => {
           })
         );
 
-        setWalletStatus({
-          ...walletStatus,
-          status: "connected",
-          address: wallet.address,
-        });
+       
       });
     } catch (e) {
       console.log(e);
@@ -108,7 +94,6 @@ const Navbar = () => {
         await isConnected();
       } catch (error) {
         console.error('Error fetching Metamask data:', error);
-        // Handle error appropriately, e.g., display an error message to the user
       }
     };
 
@@ -137,6 +122,9 @@ const Navbar = () => {
         </div>
         <div className="py-2 px-4 bg-white rounded-md shadow-md">
           <a href="#" onClick= {()=> navigate('/sell')}className="text-blue-500 hover:underline hover:text-blue-700 transition duration-300 ease-in-out">Sell NFT</a>
+        </div>
+        <div className="py-2 px-4 bg-white rounded-md shadow-md">
+          <a href="#" onClick= {()=> navigate('/DisputeSale')}className="text-blue-500 hover:underline hover:text-blue-700 transition duration-300 ease-in-out">Dispute Sale</a>
         </div>
         <div className="py-2 px-4 bg-white rounded-md shadow-md cursor-pointer">
         {storeData.wallet === "connected" ? (

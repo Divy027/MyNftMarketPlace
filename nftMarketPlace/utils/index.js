@@ -2,8 +2,6 @@ import CONFIG from "../config";
 import Web3 from "web3";
 import { ethers } from "ethers";
 
-
-
 export const connectWallet = async () => {
     try {
       if (window.ethereum) {
@@ -42,19 +40,19 @@ export const connectWallet = async () => {
           // No exist Mumbai chain in your wallet
           const networkMap = {
             
-            MUMBAI_TESTNET: {
-              chainId: ethers.utils.hexValue(80001), // '0x13881'
-              chainName: "Matic(Polygon) Mumbai Testnet",
-              nativeCurrency: { name: "tMATIC", symbol: "tMATIC", decimals: 18 },
-              rpcUrls: ["https://rpc-mumbai.maticvigil.com"],
-              blockExplorerUrls: ["https://mumbai.polygonscan.com/"],
+             TESTNET: {
+              chainId: ethers.utils.hexValue(11155111),
+              chainName: "Sepolia",
+              nativeCurrency: { name: "ETH", symbol: "ETH", decimals: 18 },
+              rpcUrls: ["https://eth-sepolia.g.alchemy.com/v2/demo"],
+              blockExplorerUrls: ["https://sepolia.etherscan.io"],
             },
             
           };
   
           await window.ethereum.request({
             method: "wallet_addEthereumChain",
-            params: [networkMap.MUMBAI_TESTNET],
+            params: [networkMap.TESTNET],
           });
   
           const addressArray = await window.ethereum.request({
@@ -88,3 +86,18 @@ export const connectWallet = async () => {
       console.log("error", error);
     }
   };
+
+  export const  isValidAddress = async(address) =>{
+    try {
+        return ethers.utils.isAddress(address);
+    } catch (e) {
+        return false;
+    }
+  }
+
+  export const formatAddress = (address) =>{
+    if (address && address.length > 8) {
+      return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
+    }
+    return address;
+  }

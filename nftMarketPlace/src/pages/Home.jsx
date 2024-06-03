@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar'
 import CONFIG from '../../config'
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { getBalance } from '../../utils'
+import { formatAddress, getBalance } from '../../utils'
 import { useSelector } from 'react-redux'
 
 export default function Home(){
@@ -15,8 +15,18 @@ export default function Home(){
     const storeData = useSelector((status) => status);
 
     useEffect(()=>{
-        loadNFTs()
+      loadNFTs()
     },[])
+
+    useEffect(() => {
+      try {
+        window.ethereum.on("accountsChanged", async () => {
+          loadNFTs()
+        });
+      } catch (e) {
+        console.log(e);
+      }
+    }, []);
     
 
     async function loadNFTs(){
@@ -36,24 +46,22 @@ export default function Home(){
             CONFIG.NFTMarket.ABINFTM,
             signer
         );
-        const Balance =  await getBalance();
-        console.log(Balance)
+        
         const data =await MarketContract.fetchMarketItems();
-          console.log(data)
+          
         const items=await Promise.all(data.map(async i=>{
             const tokenUri=await NftContract.tokenURI(i.tokenId) 
             const meta=await axios.get(tokenUri)
-            let price=ethers.utils.formatUnits(i.price.toString(),'ether')
-            console.log(price);
             let item={
                 itemId: ethers.utils.parseUnits(i.itemId.toString())/CONFIG.DECIMAL,
-                price,
+                price: i.price.toString(),
                 tokenId:i.tokenId.toNumber(),
                 seller:i.seller,
                 owner:i.owner,
                 image: meta.data.image,
                 name: meta.data.name,
-                description: meta.data.description
+                description: meta.data.description,
+                Arbiter: i.arbiter,
             }
             console.log(item)
             return item
@@ -82,17 +90,16 @@ export default function Home(){
           );
          
           const Balance = await getBalance();
-          console.log(Balance)
-          if(Balance < nft.price.toString()){
+          const Ethprice = await MarketContract.convertUsdToEth(nft.price.toString());
+
+          if(Balance < ethers.utils.formatEther(Ethprice)){
             toast.error("Not enough Balance to buy NFT")
             setLoading(false);
             return ;
           }
           
-          const price = ethers.utils.parseUnits(nft.price);
-          console.log(price)
-          const transaction = await MarketContract.createMarketSale(CONFIG.NFT.CONTRACTADDRESS721, nft.itemId, {
-            value: price,
+          const transaction = await MarketContract.createMarketSale( nft.itemId, {
+            value: Ethprice,
           });
           await transaction.wait();
           setLoading(false);
@@ -117,10 +124,11 @@ export default function Home(){
               <p className="text-xl font-semibold text-white-800">{nft.name}</p>
               <div className="h-16 overflow-hidden">
                 <p className="text-gray-400 line-clamp-3">{nft.description}</p>
+                <p className="text-gray-400 line-clamp-3">Arbiter = {formatAddress(nft.Arbiter)}</p>
               </div>
             </div>
             <div className="p-4 bg-blue-500">
-              <p className="text-xl font-bold text-white">{nft.price} MATIC</p>
+              <p className="text-xl font-bold text-white">{nft.price} USD</p>
               <button
                 onClick={() => buyNFT(nft)}
                 className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded mt-2 transition duration-300"

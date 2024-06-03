@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import CONFIG from '../../config'
+import { isValidAddress } from '../../utils';
 
 const projectId= `${import.meta.env.VITE_PROJECTID}` //<infura nft api>
 const projectSecret=`${import.meta.env.VITE_PROJECTAPI}`//<infura nft api>
@@ -25,7 +26,7 @@ const auth = "Basic " + btoa(`${projectId}:${projectSecret}`);
 
 export default function CreateItem(){
   const [fileUrl,setFileUrl] = useState(null)
-  const [formInput,updateFormInput]=useState({price:"",name:"",description:""})
+  const [formInput,updateFormInput]=useState({price:"",name:"",description:"", Arbiter:"0x0000000000000000000000000000000000000000"})
   const [isLoading,setLoading] = useState(false);
   const [imgLoading, setImgLoading] = useState(false);
 
@@ -48,8 +49,8 @@ export default function CreateItem(){
 
   async function CreateMarket(){
     setLoading(true);
-    const {name,description,price}=formInput
-    if(!name||!description||!price||!fileUrl) return
+    const {name,description,price, Arbiter}=formInput
+    if(!name||!description||!price||!fileUrl || !isValidAddress(Arbiter)) return
 
     const data=JSON.stringify({
       name,description,image:fileUrl
@@ -58,14 +59,14 @@ export default function CreateItem(){
       const added=await client.add(data)
       const url=`https://nftmdivy.infura-ipfs.io/ipfs/${added.path}`
       console.log(url)
-      await createSale(url)
+      await createSale(url,price,Arbiter)
     }catch(error){
       console.log('error uploading file:',error)
       setLoading(false);
     }
   }
 
-  async function createSale(url) {
+  async function createSale(url,price,Arbiter) {
     try {
       const Provider = new ethers.providers.Web3Provider(window.ethereum);
       const signer = Provider.getSigner();
@@ -81,20 +82,13 @@ export default function CreateItem(){
       const value = event.args[2];
       const tokenId = value.toNumber();
       
-      const price = ethers.utils.parseUnits(formInput.price, 'ether');
-  
       const MarketContract = new Contract(
         CONFIG.NFTMarket.CONTRACTADDRESSNFTM,
         CONFIG.NFTMarket.ABINFTM,
         signer
       );
   
-      let listingPrice = await MarketContract.getListingPrice();
-      listingPrice = listingPrice.toString();
-  
-      const TX = await MarketContract.createMarketItem(CONFIG.NFT.CONTRACTADDRESS721, tokenId, price, {
-        value: listingPrice,
-      });
+      const TX = await MarketContract.createMarketItem(CONFIG.NFT.CONTRACTADDRESS721, tokenId, price,Arbiter);
       await TX.wait();
       setLoading(false);
       toast.success("Nft ready to Sell !")
@@ -132,10 +126,18 @@ export default function CreateItem(){
           />
   
           <input
-            placeholder="NFT price in MATIC"
+            placeholder="NFT price in USD"
             className="mt-4 border rounded p-4 w-full"
             onChange={(e) => updateFormInput({ ...formInput, price: e.target.value })}
           />
+
+          <input
+            placeholder="Arbiter Address"
+            className="mt-4 border rounded p-4 w-full"
+            onChange={(e) => updateFormInput({ ...formInput, Arbiter: e.target.value })}
+          />
+
+          <p> Use Zero Address if dont want to set Arbiter</p>
   
           <label className="mt-4 text-blue-600 cursor-pointer hover:underline">
             <input
@@ -160,9 +162,6 @@ export default function CreateItem(){
             Create NFT
           </button>
   
-          <p className="mt-4 text-gray-600 text-sm">
-            Listing price: 0.00001 MATIC
-          </p>
         </div>
       </div>
       <ToastContainer/>
